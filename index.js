@@ -1,17 +1,45 @@
 const express = require('express');
 const cors = require('cors');
-const { MongoClient, ServerApiVersion } = require('mongodb');
+var jwt = require('jsonwebtoken');
+const cookieParse = require('cookie-parser');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const app = express();
 const port = process.env.PORT || 5000;
 require('dotenv').config()
 
 // middlewares
-app.use(cors());
+app.use(cors({
+    origin: ['http://localhost:5173'],
+    credentials: true
+  }));
 app.use(express.json());
+app.use(cookieParse());
 
-// hotelMaster
-// JpKe3x6PvKyeRbja
 
+
+// custom middlewares 
+const verifyToken = async (req, res, next) => {
+    const token = req.cookies?.token;
+    // console.log("tokeennn ",token);
+    if (!token) {
+      return res.status(401).send({ message: "Forbidden" })
+    }
+    jwt.verify(token, process.env.ACESS_TOKEN_SECRET, (err, decoded) => {
+      if (err) {
+        console.log(err)
+        res.status(401).send({ message: 'unauthorized' })
+      }
+      // console.log("value in the token", decoded);
+      req.user = decoded;
+      next();
+    })
+  }
+
+  app.post('/logout', async (req, res) => {
+    const user = req.body;
+    console.log("Logged out ",user);
+    res.clearCookie('token', { maxAge: 0 }).send({ success: true })
+  })
 
 
 
@@ -28,14 +56,27 @@ const client = new MongoClient(uri, {
 
 async function run() {
   try {
-    // Connect the client to the server	(optional starting in v4.7)
-    // await client.connect();
-    // Send a ping to confirm a successful connection
-    // await client.db("admin").command({ ping: 1 });
+    //auth(token) related api
+    app.post('/jwt', async (req, res) => {
+        const user = req.body;
+        const token = jwt.sign(user, process.env.ACESS_TOKEN_SECRET, { expiresIn: '2h' })
+        console.log(token);
+        res
+          .cookie('token', token, {
+            httpOnly: true,
+            secure: false,
+            // sameSite: 'none'  //eta dile hocche na keno??
+          })
+          .send({ success: true })
+        
+      
+
+      })
+
+
+
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {
-    // Ensures that the client will close when you finish/error
-    // await client.close();
   }
 }
 run().catch(console.dir);
