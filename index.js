@@ -15,12 +15,9 @@ app.use(cors({
 app.use(express.json());
 app.use(cookieParse());
 
-
-
 // custom middlewares 
 const verifyToken = async (req, res, next) => {
     const token = req.cookies?.token;
-    // console.log("tokeennn ",token);
     if (!token) {
       return res.status(401).send({ message: "Forbidden" })
     }
@@ -29,7 +26,6 @@ const verifyToken = async (req, res, next) => {
         console.log(err)
         res.status(401).send({ message: 'unauthorized' })
       }
-      // console.log("value in the token", decoded);
       req.user = decoded;
       next();
     })
@@ -65,12 +61,9 @@ async function run() {
           .cookie('token', token, {
             httpOnly: true,
             secure: false,
-            // sameSite: 'none'  //eta dile hocche na keno??
+            // sameSite: 'none'  
           })
           .send({ success: true })
-        
-      
-
       })
 
 
