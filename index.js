@@ -16,20 +16,20 @@ app.use(express.json());
 app.use(cookieParse());
 
 // custom middlewares 
-// const verifyToken = async (req, res, next) => {
-//   const token = req.cookies?.token;
-//   if (!token) {
-//     return res.status(401).send({ message: "Forbidden" })
-//   }
-//   jwt.verify(token, process.env.ACESS_TOKEN_SECRET, (err, decoded) => {
-//     if (err) {
-//       console.log(err)
-//       res.status(401).send({ message: 'unauthorized' })
-//     }
-//     req.user = decoded;
-//     next();
-//   })
-// }
+const verifyToken = async (req, res, next) => {
+  const token = req.cookies?.token;
+  if (!token) {
+    return res.status(401).send({ message: "Forbidden" })
+  }
+  jwt.verify(token, process.env.ACESS_TOKEN_SECRET, (err, decoded) => {
+    if (err) {
+      console.log(err)
+      res.status(401).send({ message: 'unauthorized' })
+    }
+    req.user = decoded;
+    next();
+  })
+}
 
 app.post('/logout', async (req, res) => {
   const user = req.body;
@@ -54,6 +54,7 @@ async function run() {
     const database = client.db("grandHotelDB");
     // products Collection
     const roomsCollection = database.collection("rooms");
+    const bookRooms = database.collection("bookRooms")
 
 
     //auth(token) related api
@@ -70,7 +71,6 @@ async function run() {
     })
 
     //Rooms related api
-
     // GET 
     app.get('/rooms', async (req, res) => {
       const cursor = roomsCollection.find();
@@ -88,7 +88,24 @@ async function run() {
     //Booking confirm related api
     app.post('/bookingconfirm',async(req,res)=>{
       const body = req.body;
+      const result = await bookRooms.insertOne(body)
       console.log(body);
+            res.send(result)
+    })
+
+    //my bookings list api
+    app.get('/mybookings', verifyToken, async (req, res) => {
+      // console.log("tokeenn", req.cookies.token);
+      // console.log('from bookings..', req.user);
+      if (req.query?.email !== req.user.email) {
+        return res.status(403).send({ message: 'forbidden access' })
+      }
+      let query = {}
+      if (req.query?.email) {
+        query = { email: req.query.email }
+      }
+      const result = await bookRooms.find(query).toArray();
+      res.send(result)
     })
 
 
