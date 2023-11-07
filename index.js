@@ -55,6 +55,7 @@ async function run() {
     // products Collection
     const roomsCollection = database.collection("rooms");
     const bookRooms = database.collection("bookRooms")
+    const userReviewCollection = database.collection("userReviewCollection")
 
 
     //auth(token) related api
@@ -80,17 +81,19 @@ async function run() {
     //GET SINGLE ID/Product
     app.get('/rooms/:id', async (req, res) => {
       const id = req.params.id;
+      // console.log(id);
       const query = { _id: new ObjectId(id) };
       const result = await roomsCollection.findOne(query);
       res.send(result)
     })
 
 
+
     //update (available) on main room data
     app.put('/rooms/:id', async (req, res) => {
       const id = req.params.id;
       const body = req.body;
-      console.log(id, body);
+      // console.log(id, body);
       const filter = { _id: new ObjectId(id) }
       const options = { upsert: true };
       const updateAvailable = {
@@ -98,7 +101,6 @@ async function run() {
           available: body.available
         }
       }
-      console.log(id, body);
       const result = await roomsCollection.updateOne(filter, updateAvailable, options)
 
       res.send(result);
@@ -106,8 +108,22 @@ async function run() {
 
 
 
+//updated cancel room availability
+app.put('/updateconfirm/:id', async (req, res) => {
+  const id = req.params.id;
+  const body = req.body;
+  // console.log(id, body);
+  const filter = { _id: new ObjectId(id) }
+  const options = { upsert: true };
+  const updateAvailable = {
+    $set: {
+      available: body.available
+    }
+  }
+  const result = await roomsCollection.updateOne(filter, updateAvailable, options)
 
-
+  res.send(result);
+})
 
 
 
@@ -170,6 +186,22 @@ async function run() {
     })
 
 
+
+    //Reviews related api
+    app.get('/reviews/:id', async (req, res) => {
+      const id = req.params.id;
+      // console.log(id);
+      const query = { roomId: id };
+      const result = await userReviewCollection.find(query).toArray();
+      console.log(query,id,result);
+      res.send(result)
+    })
+
+    app.post('/reviews', async (req, res) => {
+      const body = req.body;
+      const result = await userReviewCollection.insertOne(body)
+      res.send(result)
+    })
 
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {
