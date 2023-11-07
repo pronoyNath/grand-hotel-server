@@ -85,6 +85,33 @@ async function run() {
       res.send(result)
     })
 
+
+    //update (available) on main room data
+    app.put('/rooms/:id', async (req, res) => {
+      const id = req.params.id;
+      const body = req.body;
+      console.log(id, body);
+      const filter = { _id: new ObjectId(id) }
+      const options = { upsert: true };
+      const updateAvailable = {
+        $set: {
+          available: body.available
+        }
+      }
+      console.log(id, body);
+      const result = await roomsCollection.updateOne(filter, updateAvailable, options)
+
+      res.send(result);
+    })
+
+
+
+
+
+
+
+
+
     //Booking confirm related api
     app.post('/bookingconfirm', async (req, res) => {
       const body = req.body;
@@ -108,22 +135,31 @@ async function run() {
       res.send(result)
     })
 
+    //  booked room data 
+    app.get('/mybookings/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await roomsCollection.findOne(query);
+      res.send(result)
+    })
+
+
     // update checking dates 
     app.patch('/bookingconfirm/:id', async (req, res) => {
       const id = req.params.id;
       const dates = req.body;
-      console.log(id,dates);
+      // console.log(id, dates);
       const filter = { _id: new ObjectId(id) }
       const updateDate = {
-          $set: {
-            fromDateTime : dates.fromDate,
-            toDateTime: dates.toDate
-          }
+        $set: {
+          fromDateTime: dates.fromDate,
+          toDateTime: dates.toDate
+        }
       }
       const result = await bookRooms.updateOne(filter, updateDate)
 
       res.send(result);
-  })
+    })
 
     //delete bookedlist
     app.delete('/bookingconfirm/:id', async (req, res) => {
