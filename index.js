@@ -102,8 +102,9 @@ async function run() {
       }
       let query = {}
       if (req.query?.email) {
-        query = { email: req.query.email }
+        query = { userEmail: req.query.email }
       }
+      console.log(req.query?.email,req.user?.email);
       const result = await bookRooms.find(query).toArray();
       res.send(result)
     })
