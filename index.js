@@ -86,11 +86,10 @@ async function run() {
     })
 
     //Booking confirm related api
-    app.post('/bookingconfirm',async(req,res)=>{
+    app.post('/bookingconfirm', async (req, res) => {
       const body = req.body;
       const result = await bookRooms.insertOne(body)
-      console.log(body);
-            res.send(result)
+      res.send(result)
     })
 
     //my bookings list api
@@ -104,10 +103,36 @@ async function run() {
       if (req.query?.email) {
         query = { userEmail: req.query.email }
       }
-      console.log(req.query?.email,req.user?.email);
+      // console.log(req.query?.email, req.user?.email);
       const result = await bookRooms.find(query).toArray();
       res.send(result)
     })
+
+    // update checking dates 
+    app.patch('/bookingconfirm/:id', async (req, res) => {
+      const id = req.params.id;
+      const dates = req.body;
+      console.log(id,dates);
+      const filter = { _id: new ObjectId(id) }
+      const updateDate = {
+          $set: {
+            fromDateTime : dates.fromDate,
+            toDateTime: dates.toDate
+          }
+      }
+      const result = await bookRooms.updateOne(filter, updateDate)
+
+      res.send(result);
+  })
+
+    //delete bookedlist
+    app.delete('/bookingconfirm/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) }
+      const result = await bookRooms.deleteOne(query);
+      res.send(result);
+    })
+
 
 
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
@@ -134,5 +159,5 @@ app.get('/', (req, res) => {
 })
 
 app.listen(port, () => {
-  console.log(`car doctor server is running on port ${port}`);
+  console.log(`grand hotel server is running on port ${port}`);
 })
