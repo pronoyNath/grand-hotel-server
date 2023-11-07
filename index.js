@@ -9,33 +9,32 @@ require('dotenv').config()
 
 // middlewares
 app.use(cors({
-    origin: ['http://localhost:5173'],
-    credentials: true
-  }));
+  origin: ['http://localhost:5173'],
+  credentials: true
+}));
 app.use(express.json());
 app.use(cookieParse());
 
 // custom middlewares 
-const verifyToken = async (req, res, next) => {
-    const token = req.cookies?.token;
-    if (!token) {
-      return res.status(401).send({ message: "Forbidden" })
-    }
-    jwt.verify(token, process.env.ACESS_TOKEN_SECRET, (err, decoded) => {
-      if (err) {
-        console.log(err)
-        res.status(401).send({ message: 'unauthorized' })
-      }
-      req.user = decoded;
-      next();
-    })
-  }
+// const verifyToken = async (req, res, next) => {
+//   const token = req.cookies?.token;
+//   if (!token) {
+//     return res.status(401).send({ message: "Forbidden" })
+//   }
+//   jwt.verify(token, process.env.ACESS_TOKEN_SECRET, (err, decoded) => {
+//     if (err) {
+//       console.log(err)
+//       res.status(401).send({ message: 'unauthorized' })
+//     }
+//     req.user = decoded;
+//     next();
+//   })
+// }
 
-  app.post('/logout', async (req, res) => {
-    const user = req.body;
-    console.log("Logged out ",user);
-    res.clearCookie('token', { maxAge: 0 }).send({ success: true })
-  })
+app.post('/logout', async (req, res) => {
+  const user = req.body;
+  res.clearCookie('token', { maxAge: 0 }).send({ success: true })
+})
 
 
 
@@ -52,20 +51,45 @@ const client = new MongoClient(uri, {
 
 async function run() {
   try {
+    const database = client.db("grandHotelDB");
+    // products Collection
+    const roomsCollection = database.collection("rooms");
+
+
     //auth(token) related api
     app.post('/jwt', async (req, res) => {
-        const user = req.body;
-        const token = jwt.sign(user, process.env.ACESS_TOKEN_SECRET, { expiresIn: '2h' })
-        console.log(token);
-        res
-          .cookie('token', token, {
-            httpOnly: true,
-            secure: false,
-            // sameSite: 'none'  
-          })
-          .send({ success: true })
-      })
+      const user = req.body;
+      const token = jwt.sign(user, process.env.ACESS_TOKEN_SECRET, { expiresIn: '2h' })
+      res
+        .cookie('token', token, {
+          httpOnly: true,
+          secure: false,
+          // sameSite: 'none'  
+        })
+        .send({ success: true })
+    })
 
+    //Rooms related api
+
+    // GET 
+    app.get('/rooms', async (req, res) => {
+      const cursor = roomsCollection.find();
+      const result = await cursor.toArray();
+      res.send(result);
+    })
+    //GET SINGLE ID/Product
+    app.get('/rooms/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await roomsCollection.findOne(query);
+      res.send(result)
+    })
+
+    //Booking confirm related api
+    app.post('/bookingconfirm',async(req,res)=>{
+      const body = req.body;
+      console.log(body);
+    })
 
 
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
@@ -88,9 +112,9 @@ run().catch(console.dir);
 
 
 app.get('/', (req, res) => {
-    res.send("Running onnn....")
-  })
-  
-  app.listen(port, () => {
-    console.log(`car doctor server is running on port ${port}`);
-  })
+  res.send("Running onnn....")
+})
+
+app.listen(port, () => {
+  console.log(`car doctor server is running on port ${port}`);
+})
