@@ -71,14 +71,14 @@ async function run() {
         .cookie('token', token, {
 
           // before deploy
-          httpOnly: true,
-          secure: false,
+          // httpOnly: true,
+          // secure: false,
           
           
           // after deploy
-          // httpOnly: false,
-          // secure: true,
-          // sameSite: 'none'
+          httpOnly: false,
+          secure: true,
+          sameSite: 'none'
         })
         .send({ success: true })
     })
@@ -150,7 +150,7 @@ app.put('/updateconfirm/:id', async (req, res) => {
     //my bookings list api
     app.get('/mybookings', verifyToken, async (req, res) => {
       // console.log("tokeenn", req.cookies.token);
-      // console.log('from bookings..', req.user);
+      // console.log(req.query.email,'from bookings..', req.user.email);
       if (req.query?.email !== req.user.email) {
         return res.status(403).send({ message: 'forbidden access' })
       }
