@@ -9,7 +9,11 @@ require('dotenv').config()
 
 // middlewares
 app.use(cors({
-  origin: ['http://localhost:5173'],
+  origin: [
+    // 'http://localhost:5173'
+    "https://grand-hotel-daa65.web.app",
+    "https://grand-hotel-daa65.firebaseapp.com"
+],
   credentials: true
 }));
 app.use(express.json());
@@ -64,9 +68,15 @@ async function run() {
       const token = jwt.sign(user, process.env.ACESS_TOKEN_SECRET, { expiresIn: '2h' })
       res
         .cookie('token', token, {
-          httpOnly: true,
-          secure: false,
-          // sameSite: 'none'  
+          // httpOnly: true,
+          // secure: false,
+          // sameSite: 'none' 
+          
+          
+          // after deploy
+          httpOnly: false,
+          secure: true,
+          sameSite: 'none'
         })
         .send({ success: true })
     })
